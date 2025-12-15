@@ -1,0 +1,8 @@
+streamlit
+plotly
+pandas
+networkx
+pyvis
+python-dateutil
+google-generativeai
+python-dotenv
