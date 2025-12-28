@@ -2,7 +2,11 @@
 
 An interactive investigative social media analytics dashboard built with Streamlit, designed to analyze social media data patterns, trends, and networks.
 
-## 🎯 Project Overview
+## 🌐 Live Demo
+
+**Hosted Dashboard:** https://research-engineering-intern-assignment-7qg8byjh6jf9vk3naa4n9o.streamlit.app/
+
+##  Project Overview
 
 This dashboard provides foundational analytics capabilities for social media data investigation, focusing on:
 
