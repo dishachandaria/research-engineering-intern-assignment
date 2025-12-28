@@ -59,7 +59,7 @@ def load_data():
         return pd.DataFrame()
 
 
-def apply_filters(data, keyword_filter, date_range, platform_filter, subreddit_filter):
+def apply_filters(data, keyword_filter, date_range, subreddit_filter):
     """Apply user-selected filters to the data."""
     filtered_data = data.copy()
     
@@ -76,10 +76,6 @@ def apply_filters(data, keyword_filter, date_range, platform_filter, subreddit_f
             (filtered_data['created_at'].dt.date >= start_date) &
             (filtered_data['created_at'].dt.date <= end_date)
         ]
-    
-    # Platform filter
-    if platform_filter and platform_filter != "All":
-        filtered_data = filtered_data[filtered_data['platform'] == platform_filter]
     
     # Subreddit filter
     if subreddit_filter and subreddit_filter != "All":
@@ -140,17 +136,13 @@ def main():
         date_range = None
         st.sidebar.warning("No valid dates found in data")
     
-    # Platform filter
-    platforms = ["All"] + sorted(data['platform'].unique().tolist())
-    platform_filter = st.sidebar.selectbox("Platform:", platforms)
-    
     # Subreddit filter (top 20 most active)
     top_subreddits = data['subreddit'].value_counts().head(20).index.tolist()
     subreddit_options = ["All"] + top_subreddits
     subreddit_filter = st.sidebar.selectbox("Subreddit:", subreddit_options)
     
     # Apply filters
-    filtered_data = apply_filters(data, keyword_filter, date_range, platform_filter, subreddit_filter)
+    filtered_data = apply_filters(data, keyword_filter, date_range, subreddit_filter)
     
     # Display filter results
     st.sidebar.markdown("---")

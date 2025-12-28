@@ -257,45 +257,129 @@ def render_floating_chat_button():
     """Render floating chat button CSS and HTML."""
     st.markdown("""
     <style>
-    .floating-chat-btn {
+    .floating-chat-container {
         position: fixed;
         bottom: 20px;
         right: 20px;
-        width: 60px;
-        height: 60px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 10px;
+    }
+    
+    .chat-label {
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateX(10px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+    }
+    
+    .floating-chat-btn {
+        width: 70px;
+        height: 70px;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 50%;
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 1000;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         transition: all 0.3s ease;
         border: none;
         color: white;
         font-size: 24px;
         text-decoration: none;
+        position: relative;
     }
     
     .floating-chat-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+        transform: scale(1.05);
+        box-shadow: 0 6px 25px rgba(0,0,0,0.3);
+    }
+    
+    .floating-chat-btn:hover + .chat-label,
+    .floating-chat-container:hover .chat-label {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    
+    .chat-icon {
+        font-size: 28px;
+        margin-bottom: 2px;
+    }
+    
+    .chat-text {
+        font-size: 10px;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        line-height: 1;
     }
     
     .chat-status-indicator {
         position: absolute;
-        top: -2px;
-        right: -2px;
-        width: 16px;
-        height: 16px;
+        top: 2px;
+        right: 2px;
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
-        border: 2px solid white;
+        border: 3px solid white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
     }
     
-    .status-ready { background: #2ecc71; }
-    .status-setup { background: #f39c12; }
-    .status-error { background: #e74c3c; }
+    .status-ready { 
+        background: #2ecc71;
+        animation: pulse-ready 2s infinite;
+    }
+    .status-setup { 
+        background: #f39c12;
+        animation: pulse-setup 2s infinite;
+    }
+    .status-error { 
+        background: #e74c3c; 
+    }
+    
+    @keyframes pulse-ready {
+        0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); }
+    }
+    
+    @keyframes pulse-setup {
+        0% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7); }
+        70% { box-shadow: 0 0 0 10px rgba(243, 156, 18, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(243, 156, 18, 0); }
+    }
+    
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .floating-chat-container {
+            bottom: 15px;
+            right: 15px;
+        }
+        .floating-chat-btn {
+            width: 60px;
+            height: 60px;
+        }
+        .chat-icon {
+            font-size: 24px;
+        }
+        .chat-text {
+            font-size: 9px;
+        }
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -306,7 +390,7 @@ def render_chatbot_interface(chatbot: GeminiChatbot,
                            top_contributors: pd.DataFrame,
                            network_stats: Dict[str, Any]) -> None:
     """
-    Render the floating chatbot button and handle sidebar panel.
+    Render the AI assistant interface with a user-friendly button.
     
     Args:
         chatbot: GeminiChatbot instance
@@ -319,28 +403,30 @@ def render_chatbot_interface(chatbot: GeminiChatbot,
     if "chat_panel_open" not in st.session_state:
         st.session_state.chat_panel_open = False
     
-    # Render floating button CSS
-    render_floating_chat_button()
+    # Create AI Assistant section in main interface
+    st.markdown('<h2 class="section-header">🤖 AI Assistant</h2>', unsafe_allow_html=True)
     
-    # Determine status indicator
-    if chatbot.initialized:
-        status_class = "status-ready"
-        status_title = "AI Assistant Ready - Click to chat"
-    else:
-        status_class = "status-setup"
-        status_title = "AI Assistant - Setup required"
+    # Status and toggle button
+    col1, col2, col3 = st.columns([2, 1, 1])
     
-    # Render floating button
-    st.markdown(f"""
-    <div class="floating-chat-btn" title="{status_title}" onclick="document.getElementById('chat_toggle_btn').click();">
-        🤖
-        <div class="chat-status-indicator {status_class}"></div>
-    </div>
-    """, unsafe_allow_html=True)
+    with col1:
+        if chatbot.initialized:
+            st.success("✅ AI Assistant Ready - Ask questions about your data!")
+        else:
+            st.warning("⚠️ AI Assistant Setup Required")
+            st.info("💡 Get insights, analysis, and investigation suggestions from AI")
     
-    # Hidden button to handle clicks (Streamlit workaround)
-    if st.button("", key="chat_toggle_btn", help="Toggle AI Assistant"):
-        st.session_state.chat_panel_open = not st.session_state.chat_panel_open
+    with col2:
+        # Main toggle button
+        if chatbot.initialized:
+            button_text = "💬 Open AI Chat" if not st.session_state.chat_panel_open else "❌ Close Chat"
+            button_help = "Click to chat with AI about your data" if not st.session_state.chat_panel_open else "Close AI chat panel"
+        else:
+            button_text = "⚙️ Setup AI"
+            button_help = "Configure AI assistant to get started"
+        
+        if st.button(button_text, key="ai_toggle_btn", help=button_help, use_container_width=True):
+            st.session_state.chat_panel_open = not st.session_state.chat_panel_open
     
     # Render sidebar panel if open
     if st.session_state.chat_panel_open:
